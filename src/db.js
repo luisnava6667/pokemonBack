@@ -2,10 +2,10 @@ require('dotenv').config()
 const { Sequelize } = require('sequelize')
 const fs = require('fs')
 const path = require('path')
-const { DB_USER, DB_PASSWORD, DB_HOST } = process.env
+const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME } = process.env
 
 const sequelize = new Sequelize(
-  `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/pokeDb`,
+  `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}`,
   {
     logging: false, // set to console.log to see the raw SQL queries
     native: false // lets Sequelize know we can use pg-native for ~30% more speed
@@ -37,11 +37,20 @@ sequelize.models = Object.fromEntries(capsEntries)
 
 // En sequelize.models están todos los modelos importados como propiedades
 // Para relacionarlos hacemos un destructuring
-const { Pokemon, Type } = sequelize.models
+const { Pokemon, Type, Game, Move, Ability } = sequelize.models
 // Aca vendrian las relaciones
 // Product.hasMany(Reviews);
-Type.belongsToMany(Pokemon, { through: 'pokemon_type' })
-Pokemon.belongsToMany(Type, { through: 'pokemon_type' })
+Type.belongsToMany(Pokemon, { through: 'pokemonType' })
+Pokemon.belongsToMany(Type, { through: 'pokemonType' })
+
+Game.belongsToMany(Pokemon, { through: 'pokemonGame' })
+Pokemon.belongsToMany(Game, { through: 'pokemonGame' })
+
+Ability.belongsToMany(Pokemon, { through: 'pokemonAbility' })
+Pokemon.belongsToMany(Ability, { through: 'pokemonAbility' })
+
+Move.belongsToMany(Pokemon, { through: 'pokemonMove' })
+Pokemon.belongsToMany(Move, { through: 'pokemonMove' })
 
 module.exports = {
   ...sequelize.models, // para poder importar los modelos así: const { Product, User } = require('./db.js');

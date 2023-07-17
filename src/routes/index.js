@@ -1,12 +1,16 @@
 const { Router } = require('express')
-const { getPokemons, newPokemon, pokemonById } = require('../controllers/pokemonController')
-const { createTypes } = require('../controllers/typesController')
+const pokeRouter = require('./pokemon.routes')
+const typeRouter = require('./types.routes')
+const movesRouter = require('./moves.routes')
+const abilityRouter = require('./abilities.routes')
+const gamesRouter = require('./games.routes')
 
 const router = Router()
+router.use('/pokemons', pokeRouter)
+router.use('/types', typeRouter)
+router.use('/moves', movesRouter)
+router.use('/ability', abilityRouter)
+router.use('/games', gamesRouter)
 
-router.get('/pokemons', getPokemons)
-router.get('/pokemon/:id', pokemonById)
-router.post('/createPokemon', newPokemon)
-router.get('/types', createTypes)
 
 module.exports = router

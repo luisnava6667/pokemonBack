@@ -1,16 +1,13 @@
 const { DataTypes } = require('sequelize')
-// Exportamos una funcion que define el modelo
-// Luego le injectamos la conexion a sequelize.
 module.exports = (sequelize) => {
-  // defino el modelo
   sequelize.define(
-    'pokemon',
+    'Pokemon',
     {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
         allowNull: false,
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true
       },
       name: {
         type: DataTypes.STRING,
@@ -18,6 +15,10 @@ module.exports = (sequelize) => {
       },
       image: {
         type: DataTypes.STRING(200),
+        allowNull: false
+      },
+      characteristic: {
+        type: DataTypes.STRING,
         allowNull: false
       },
       hp: {
@@ -91,6 +92,17 @@ module.exports = (sequelize) => {
         defaultValue: true
       }
     },
-    { timestamps: false }
+    {
+      timestamps: false,
+      hooks: {
+        beforeCreate: async (pokemon) => {
+          const lastPokemon = await sequelize.models.Pokemon.findOne({
+            order: [['id', 'DESC']]
+          })
+          const newId = lastPokemon ? lastPokemon.id + 1 : 20000
+          pokemon.id = newId
+        }
+      }
+    }
   )
 }
