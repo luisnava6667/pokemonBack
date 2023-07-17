@@ -46,6 +46,7 @@ const createPokemonHandler = async (req, res) => {
     height,
     weight,
     characteristic,
+    moves,
     types
   } = req.body
   try {
@@ -61,6 +62,7 @@ const createPokemonHandler = async (req, res) => {
       height,
       weight,
       characteristic,
+      moves,
       types
     )
     res.status(200).json(response)

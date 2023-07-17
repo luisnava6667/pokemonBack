@@ -1,6 +1,6 @@
 const { default: axios } = require('axios')
 const pokeApi = require('../config/pokeApi.js')
-const { Pokemon, Type } = require('../db.js')
+const { Pokemon, Type, Move,Ability, Game } = require('../db.js')
 const { filterPokemonsByName } = require('../helpers/index.js')
 
 const pokeAttributesForHomeApi = async (url) => {
@@ -75,6 +75,9 @@ const createPokemonDB = async (
   height,
   weight,
   characteristic,
+  abilities,
+  moves,
+  games,
   types
 ) => {
   const newPokemon = await Pokemon.create({
@@ -88,6 +91,7 @@ const createPokemonDB = async (
     speed,
     height,
     characteristic,
+    
     weight
   })
   let typesDb = await Type.findAll({
@@ -95,7 +99,25 @@ const createPokemonDB = async (
       name: types
     }
   })
+  let movesDb = await Move.findAll({
+    where: {
+      name: moves
+    }
+  })
+  let abilitiesDb = await Ability.findAll({
+    where: {
+      name: abilities
+    }
+  })
+  let gamesDb = await Game.findAll({
+    where: {
+      name: games
+    }
+  })
+  await newPokemon.addGame(gamesDb)
   await newPokemon.addType(typesDb)
+  await newPokemon.addMove(movesDb)
+  await newPokemon.addAbility(abilitiesDb)
   return newPokemon
 }
 const pokeAttributesDB = async (id) => {
