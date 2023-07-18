@@ -46,8 +46,10 @@ const createPokemonHandler = async (req, res) => {
     height,
     weight,
     characteristic,
+    types,
     moves,
-    types
+    games,
+    abilities
   } = req.body
   try {
     const response = await createPokemonDB(
@@ -62,8 +64,10 @@ const createPokemonHandler = async (req, res) => {
       height,
       weight,
       characteristic,
+      types,
       moves,
-      types
+      games,
+      abilities
     )
     res.status(200).json(response)
   } catch (error) {

@@ -1,14 +1,15 @@
 const { default: axios } = require('axios')
 const pokeApi = require('../config/pokeApi.js')
-const { Pokemon, Type, Move,Ability, Game } = require('../db.js')
+const { Pokemon, Type, Move, Ability, Game } = require('../db.js')
 const { filterPokemonsByName } = require('../helpers/index.js')
 
 const pokeAttributesForHomeApi = async (url) => {
   const { data } = await axios.get(url)
+  const image = data.sprites.other['official-artwork'].front_default
   return {
     id: data.id,
     name: data.name,
-    image: data.sprites.other.dream_world.front_default,
+    image,
     attack: data.stats[1].base_stat,
     defense: data.stats[2].base_stat,
     types: data.types.map((t) => t.type.name)
@@ -37,31 +38,28 @@ const pokeAttributesApi = async (id) => {
   const { data } = await pokeApi.get(`/pokemon/${id}`)
   const evolution = await pokeEvolutions(id)
   console.log(evolution)
-  // const weight = data.weight / 10 + 'kg'
-  // const height = data.height / 10 + 'm'
-  // //   1 milla es aproximadamente igual a 1.609 kilómetros.
-  // const speed = (data.stats[5].base_stat * 1.609).toFixed(2) + 'km/h'
-  // const image = data.sprites.other['official-artwork'].front_default
-  // return {
-  //   id: data.id,
-  //   name: data.name,
-  //   image,
-  //   characteristic: await characteristics(id),
-  //   hp: data.stats[0].base_stat,
-  //   attack: data.stats[1].base_stat,
-  //   defense: data.stats[2].base_stat,
-  //   special_attack: data.stats[3].base_stat,
-  //   special_defense: data.stats[4].base_stat,
-  //   speed,
-  //   height,
-  //   weight,
-  //   types: data.types.map((t) => t.type.name),
-  //   moves: data.moves.map((m) => m.move.name),
-  //   abilities: data.abilities.map((a) => a.ability.name),
-  //   games: data.game_indices.map((g) => g.version.name)
-  //   // traemos las evoluciones
-  //   // evolutions: await pokeEvolutions(id)
-  // }
+  
+  const image = data.sprites.other['official-artwork'].front_default
+  return {
+    id: data.id,
+    name: data.name,
+    image,
+    characteristic: await characteristics(id),
+    hp: data.stats[0].base_stat,
+    attack: data.stats[1].base_stat,
+    defense: data.stats[2].base_stat,
+    special_attack: data.stats[3].base_stat,
+    special_defense: data.stats[4].base_stat,
+    speed: data.stats[5].base_stat,
+    height: data.height,
+    weight: data.weight,
+    types: data.types.map((t) => t.type.name),
+    moves: data.moves.map((m) => m.move.name),
+    abilities: data.abilities.map((a) => a.ability.name),
+    games: data.game_indices.map((g) => g.version.name)
+    // traemos las evoluciones
+    // evolutions: await pokeEvolutions(id)
+  }
 }
 const createPokemonDB = async (
   name,
@@ -75,10 +73,10 @@ const createPokemonDB = async (
   height,
   weight,
   characteristic,
-  abilities,
+  types,
   moves,
   games,
-  types
+  abilities
 ) => {
   const newPokemon = await Pokemon.create({
     name,
@@ -91,46 +89,83 @@ const createPokemonDB = async (
     speed,
     height,
     characteristic,
-    
     weight
   })
-  let typesDb = await Type.findAll({
-    where: {
-      name: types
-    }
-  })
-  let movesDb = await Move.findAll({
-    where: {
-      name: moves
-    }
-  })
-  let abilitiesDb = await Ability.findAll({
-    where: {
-      name: abilities
-    }
-  })
-  let gamesDb = await Game.findAll({
-    where: {
-      name: games
-    }
-  })
-  await newPokemon.addGame(gamesDb)
-  await newPokemon.addType(typesDb)
-  await newPokemon.addMove(movesDb)
-  await newPokemon.addAbility(abilitiesDb)
-  return newPokemon
+ const [typesDb, movesDb, gamesDb, abilitiesDb] = await Promise.all([
+   Type.findAll({
+     where: {
+       name: types
+     }
+   }),
+   Move.findAll({
+     where: {
+       name: moves
+     }
+   }),
+   Game.findAll({
+     where: {
+       name: games
+     }
+   }),
+   Ability.findAll({
+     where: {
+       name: abilities
+     }
+   })
+ ])
+
+ await Promise.all([
+   newPokemon.addType(typesDb),
+   newPokemon.addMove(movesDb),
+   newPokemon.addGame(gamesDb),
+   newPokemon.addAbility(abilitiesDb)
+ ])
+
+ return newPokemon
 }
 const pokeAttributesDB = async (id) => {
-  const data = await Pokemon.findByPk(id, {
-    include: {
+  const includeOptions = [
+    {
       model: Type,
       attributes: ['name'],
       through: {
         attributes: []
       }
+    },
+    {
+      model: Move,
+      attributes: ['name'],
+      through: {
+        attributes: []
+      }
+    },
+    {
+      model: Game,
+      attributes: ['name'],
+      through: {
+        attributes: []
+      }
+    },
+    {
+      model: Ability,
+      attributes: ['name'],
+      through: {
+        attributes: []
+      }
     }
+  ]
+
+  const data = await Pokemon.findByPk(id, {
+    include: includeOptions
   })
-  const typePopkemon = (data.types = data.Types.map((t) => t.name))
+
+  const [types, moves, games, abilities] = await Promise.all([
+    Promise.resolve(data.Types.map((t) => t.name)),
+    Promise.resolve(data.Moves.map((m) => m.name)),
+    Promise.resolve(data.Games.map((g) => g.name)),
+    Promise.resolve(data.Abilities.map((a) => a.name))
+  ])
+
   return {
     id: data.id,
     name: data.name,
@@ -143,10 +178,10 @@ const pokeAttributesDB = async (id) => {
     speed: data.speed,
     height: data.height,
     weight: data.weight,
-    types: typePopkemon,
-    moves: data?.moves,
-    abilities: data?.abilities,
-    games: data?.games
+    types,
+    moves,
+    abilities,
+    games
   }
 }
 const pokeAttributesForHomeDB = async () => {
