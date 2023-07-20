@@ -17,8 +17,8 @@ const getDetailTypeHandler = async (req, res) => {
 }
 const createTypeHandler = async (req, res) => {
   try {
-    await createTypeWithAPI()
-    res.status(200).send('Types Created')
+    const types = await createTypeWithAPI()
+    res.status(200).send(types)
   } catch (error) {
     res.status(500).json(error.message)
   }
