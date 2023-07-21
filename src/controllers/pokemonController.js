@@ -30,7 +30,6 @@ const characteristics = async (id) => {
   const {
     data: { descriptions }
   } = await pokeApi.get(`/characteristic/${id}`)
-  //traemos la descripción en el language en
   const language = await descriptions.find((d) => d.language.name === 'en')
   return language.description
 }
