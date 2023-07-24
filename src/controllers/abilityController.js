@@ -11,12 +11,19 @@ const getAbilityDetail = async (name) => {
 const getAbilities = async () => {
   const data = await Ability.findAll()
   const abilities = data.map((ability) => ability.name)
-  // console.log(abilities)
   const details = await Promise.all(
     abilities.map((ability) => getAbilityDetail(ability))
   )
-  console.log(details)
-  // return abilities
+  const abilitiesWithDetails =  details.map((ability) => {
+    return {
+      name: ability.name,
+      description: ability.description
+        ? ability.description.effect
+        : 'No description available'
+    }
+  })
+
+  return abilitiesWithDetails
 }
 const createAbilitiesWithAPI = async () => {
   const { data } = await pokeApi.get('/ability?limit=1000000&offset=0')

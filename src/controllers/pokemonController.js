@@ -214,7 +214,7 @@ const getPokemonById = async (id) => {
 const getPokeApi = async () => {
   const {
     data: { results }
-  } = await pokeApi.get('/pokemon?limit=1')
+  } = await pokeApi.get('/pokemon?limit=4')
   const url = results.map((e) => e.url)
   const pokeResult = await Promise.all(
     url.map((url) => pokeAttributesForHomeApi(url))
